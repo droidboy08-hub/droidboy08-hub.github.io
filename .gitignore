@@ -1,0 +1,7 @@
+# The old IONOS host's files: its upload script names the account and
+# server, and neither is needed now the site is published to GitHub Pages
+# by .github/workflows/pages.yml. Kept on disk, out of git.
+deploy.sh
+DEPLOY.md
+.htaccess
+.DS_Store

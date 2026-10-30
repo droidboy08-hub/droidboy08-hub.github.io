@@ -1,0 +1,807 @@
+/* TitleLess — web design language.
+   The app's glass, ported to a white page. Tokens mirror the app's real
+   values: radius 28/22/14, capsule = height/2, gradient alpha 0.55, the
+   Wallpaper.swift preset ramps, the iOS accent blue and green. */
+
+/* ---------------------------------------------------------------- tokens */
+:root {
+  color-scheme: light;
+
+  /* Ground. White-based: a near-white paper, never pure #FFF, so white glass
+     still reads as a separate object on top of it. */
+  --ground:        #F4F4F7;
+  --ground-2:      #ECECF1;
+
+  /* Ink */
+  --ink:           #0B0B0D;   /* Wallpaper "Ink" stop 1 — body + headings */
+  --ink-2:         #55565F;   /* secondary label */
+  --ink-3:         #8A8B95;   /* tertiary label */
+
+  /* Accents, straight off the app */
+  --accent:        #0A84FF;   /* iOS system blue — links, values */
+  --accent-press:  #0069D9;
+  --on:            #30D158;   /* iOS system green — a toggle that is on */
+
+  /* App gradient presets, used as pale blooms behind the glass */
+  --dusk-1: #1B2A4A; --dusk-2: #5B3A78; --dusk-3: #C2557A;
+  --tide-1: #08243B; --tide-2: #1B6E8C; --tide-3: #7FD4D0;
+  --bloom-3: #F2A0B6;
+
+  /* Glass */
+  --glass:         rgba(255, 255, 255, 0.55);
+  --glass-strong:  rgba(255, 255, 255, 0.72);
+  --glass-well:    rgba(255, 255, 255, 0.40);  /* a group inside a card */
+  --glass-blur:    saturate(180%) blur(24px);
+  --rim:           rgba(255, 255, 255, 0.85);  /* lit top edge */
+  --hairline:      rgba(11, 11, 13, 0.07);
+  --shadow:        0 24px 60px rgba(11, 11, 13, 0.10),
+                   0 2px 8px rgba(11, 11, 13, 0.05);
+  --shadow-lift:   0 34px 80px rgba(11, 11, 13, 0.16),
+                   0 3px 10px rgba(11, 11, 13, 0.07);
+
+  /* Geometry — the app's own radii */
+  --r-card:   28px;
+  --r-panel:  22px;
+  --r-row:    14px;
+  --r-capsule: 999px;
+
+  /* Rhythm */
+  --gutter: 20px;
+  --max:    1080px;
+  --section: clamp(64px, 9vw, 128px);
+
+  /* Type */
+  --font-round: ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system,
+                BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-text:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+                system-ui, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:  ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* White-based by decision: the site does not follow the system's dark mode.
+   The app is where light and dark live; the site is one white room. */
+
+/* --------------------------------------------------------------- reset-ish */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* The wallpaper: soft blooms of the app's gradients under everything, so the
+   glass has something to refract. Fixed, never scrolls, never interactive. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10vmax;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(44vmax 44vmax at 10% -8%,  color-mix(in oklab, var(--dusk-3) 38%, transparent), transparent 68%),
+    radial-gradient(40vmax 40vmax at 94% 6%,   color-mix(in oklab, var(--tide-3) 44%, transparent), transparent 68%),
+    radial-gradient(48vmax 48vmax at 80% 84%,  color-mix(in oklab, var(--dusk-2) 28%, transparent), transparent 70%),
+    radial-gradient(42vmax 42vmax at 6% 94%,   color-mix(in oklab, var(--bloom-3) 32%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--ground), var(--ground-2));
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3, .rounded { font-family: var(--font-round); letter-spacing: -0.02em; }
+
+h1 { font-size: clamp(40px, 6.4vw, 68px); line-height: 1.04; font-weight: 800; margin: 0; }
+h2 { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.12; font-weight: 800; margin: 0 0 12px; }
+h3 { font-size: 21px; line-height: 1.25; font-weight: 700; margin: 0 0 6px; }
+
+p  { margin: 0 0 16px; color: var(--ink-2); }
+p.lead { font-size: clamp(18px, 2.1vw, 21px); color: var(--ink-2); max-width: 56ch; }
+
+.wrap { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+
+/* ------------------------------------------------------------------ glass */
+/* One surface, three weights. Nothing else in the site draws its own box. */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--hairline);
+  border-top-color: var(--rim);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+}
+.glass--panel  { border-radius: var(--r-panel); }
+.glass--strong { background: var(--glass-strong); }
+.glass--well {
+  background: var(--glass-well);
+  border-radius: var(--r-panel);
+  border: 1px solid var(--hairline);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: color-mix(in oklab, var(--ground) 82%, white); }
+}
+
+/* =============================================================== masthead */
+/* A plain bar, not a floating pill: the mark stands on its own at the left,
+   the links sit in the middle, and the one action is at the right — which is
+   where every browser's site puts it, because that is where people look. */
+.masthead {
+  position: sticky; top: 0; z-index: 60;
+  background: color-mix(in oklab, var(--ground) 72%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+          backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s ease, background .2s ease;
+}
+/* The rule only appears once the page has moved, so the top of the page is
+   one uninterrupted surface. */
+.masthead.is-stuck {
+  border-bottom-color: var(--hairline);
+  background: color-mix(in oklab, var(--ground) 88%, transparent);
+}
+.masthead__inner {
+  display: flex; align-items: center; gap: 28px;
+  height: 68px;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-round); font-weight: 800; font-size: 19px;
+  letter-spacing: -0.02em; color: var(--ink);
+}
+.brand:hover { text-decoration: none; }
+.brand img {
+  width: 30px; height: 30px; border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--hairline), 0 1px 2px rgba(11, 13, 20, .08);
+}
+.masthead nav { display: flex; gap: 2px; margin-left: 12px; }
+.masthead nav a {
+  color: var(--ink-2); font-size: 15px; font-weight: 500;
+  padding: 8px 12px; border-radius: 10px;
+}
+.masthead nav a:hover { color: var(--ink); background: rgba(11, 13, 20, .04); text-decoration: none; }
+.masthead nav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+.masthead__cta { margin-left: auto; }
+@media (max-width: 760px) {
+  .masthead__inner { height: 60px; gap: 10px; }
+  .masthead nav { display: none; }
+}
+
+/* =================================================================== hero */
+.hero { padding-block: clamp(56px, 8vw, 104px) clamp(40px, 6vw, 72px); }
+.hero__claim { max-width: 21ch; }
+.hero h1 { font-size: clamp(42px, 6vw, 72px); letter-spacing: -0.035em; }
+.hero__sub {
+  font-size: clamp(18px, 2vw, 22px); line-height: 1.5;
+  color: var(--ink-2); max-width: 54ch; margin: 22px 0 0;
+}
+.hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+/* The row of plain facts under the buttons — the closest thing an app with no
+   ratings yet has to a trust signal, and all of it verifiable. */
+.hero__facts {
+  display: flex; flex-wrap: wrap; gap: 8px 22px;
+  margin: 26px 0 0; padding: 0; list-style: none;
+}
+.hero__facts li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--ink-2);
+}
+.hero__facts li::before {
+  content: ""; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--on); flex: none;
+}
+.hero__grid {
+  display: grid; align-items: center;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+  gap: clamp(28px, 5vw, 60px);
+}
+@media (max-width: 900px) {
+  .hero__grid { grid-template-columns: 1fr; }
+  .hero__art { order: 2; justify-self: center; }
+  .hero__claim { max-width: none; }
+}
+
+/* ============================================================ value props */
+/* Three claims, stated once, with no picture. What the page is actually
+   about, above anything that needs a screenshot to explain. */
+.props {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.prop { padding: 28px 26px; }
+.prop .ic {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: grid; place-items: center; margin-bottom: 16px;
+  background: rgba(10, 132, 255, .10); color: var(--accent);
+}
+.prop h3 { font-size: 20px; }
+.prop p { margin: 0; font-size: 15.5px; }
+@media (max-width: 880px) { .props { grid-template-columns: 1fr; } }
+
+/* ============================================================ feature row */
+/* One idea, one picture, alternating sides. Three of these carry the whole
+   product — not a gallery of everything the app can draw. */
+.feature {
+  display: grid; align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 72px);
+  padding-block: clamp(48px, 7vw, 88px);
+}
+.feature + .feature { border-top: 1px solid var(--hairline); }
+.feature__text .label { display: block; margin-bottom: 14px; }
+.feature__text h2 { font-size: clamp(26px, 3.2vw, 36px); }
+.feature__text p { font-size: 17px; max-width: 46ch; }
+.feature__list { margin: 20px 0 0; padding: 0; list-style: none; }
+.feature__list li {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 11px 0; border-bottom: 1px solid var(--hairline);
+  font-size: 15.5px; color: var(--ink-2);
+}
+.feature__list li:last-child { border-bottom: 0; }
+.feature__list b { color: var(--ink); font-weight: 600; }
+.feature--flip .feature__art { order: -1; }
+@media (max-width: 880px) {
+  .feature { grid-template-columns: 1fr; }
+  .feature--flip .feature__art { order: 0; }
+  .feature__art { justify-self: center; }
+}
+
+/* ============================================================== compare */
+.compare-wrap { overflow-x: auto; }
+.compare {
+  width: 100%; border-collapse: collapse;
+  font-size: 15.5px; min-width: 520px;
+}
+.compare th, .compare td { padding: 15px 16px; text-align: left; }
+.compare thead th {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3); font-weight: 500;
+  border-bottom: 1px solid var(--hairline);
+}
+.compare tbody tr { border-bottom: 1px solid var(--hairline); }
+.compare tbody tr:last-child { border-bottom: 0; }
+.compare td:first-child { color: var(--ink); font-weight: 500; }
+.compare td { color: var(--ink-2); }
+.compare .yes, .compare .no, .compare .mid { text-align: center; }
+.compare .yes { color: var(--on); font-weight: 600; }
+.compare .mid { color: var(--ink-2); }
+.compare .no  { color: var(--ink-3); }
+.compare thead th:not(:first-child) { text-align: center; }
+.compare td:first-child, .compare th:first-child { min-width: 240px; }
+.compare__own { background: rgba(10, 132, 255, .05); }
+.compare thead th:nth-child(2) { color: var(--accent); }
+
+/* ---------------------------------------------------------------- buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 52px; padding: 0 26px;
+  border-radius: var(--r-capsule);
+  font-family: var(--font-round); font-weight: 700; font-size: 17px;
+  border: 1px solid transparent; cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.btn:hover { text-decoration: none; transform: translateY(-1px); }
+.btn:active { transform: translateY(0) scale(0.985); }
+.btn--primary { background: var(--accent); color: #fff; box-shadow: 0 10px 26px rgba(10, 132, 255, 0.32); }
+.btn--primary:hover { background: var(--accent-press); }
+.btn--ghost {
+  background: var(--glass-strong); color: var(--ink);
+  border-color: var(--hairline); border-top-color: var(--rim);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+}
+.btn--sm { height: 42px; padding: 0 18px; font-size: 15px; }
+
+/* ------------------------------------------------------------------ phone */
+.phone {
+  position: relative;
+  width: min(300px, 78%);
+  margin-inline: auto;
+  /* The screenshot is 1206x2622, and the bezel adds 9px of padding on every
+     side — so the *border box* has to be that much wider and taller, or the
+     inner area is the wrong shape and object-fit: cover crops the sides off.
+     1206+18 x 2622+18. */
+  aspect-ratio: 1224 / 2640;
+  border-radius: 46px;
+  padding: 9px;
+  background: linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.35));
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-lift);
+}
+.phone img { width: 100%; height: 100%; object-fit: cover; border-radius: 38px; }
+.phone--tilt { transform: rotate(-2.5deg); }
+
+/* --------------------------------------------------------------- sections */
+.section { padding-block: var(--section); }
+.section__head { max-width: 62ch; margin-bottom: 36px; }
+
+.cards { display: grid; gap: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cards--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card { padding: 26px; }
+.card .ic {
+  width: 44px; height: 44px; border-radius: var(--r-row);
+  display: grid; place-items: center; margin-bottom: 16px;
+  background: var(--glass-well); border: 1px solid var(--hairline);
+  color: var(--accent);
+}
+.card p:last-child { margin-bottom: 0; }
+@media (max-width: 880px) { .cards, .cards--2 { grid-template-columns: 1fr; } }
+
+/* A settings-style list, straight from the app: a well, rows, a divider. */
+.rows { padding: 8px 18px; }
+.row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 15px 0; border-bottom: 1px solid var(--hairline);
+}
+.row:last-child { border-bottom: 0; }
+.row__title { font-weight: 500; }
+.row__value { margin-left: auto; color: var(--accent); font-weight: 500; }
+.row__hint { display: block; font-size: 14px; color: var(--ink-3); font-weight: 400; }
+.toggle {
+  margin-left: auto; width: 51px; height: 31px; border-radius: var(--r-capsule);
+  background: rgba(120, 120, 128, 0.32); position: relative; flex: none;
+}
+.toggle.is-on { background: var(--on); }
+.toggle::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 27px; height: 27px; border-radius: 50%; background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .2s ease;
+}
+.toggle.is-on::after { transform: translateX(20px); }
+
+/* Screenshot gallery */
+.strip { display: grid; gap: 30px 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.strip .phone { width: 100%; }
+.shot { margin: 0; }
+.shot figcaption {
+  margin-top: 14px; text-align: center;
+  font-size: 15px; font-weight: 500; color: var(--ink-2);
+}
+@media (max-width: 880px) {
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+  .shot figcaption { font-size: 14px; }
+}
+@media (max-width: 520px) { .strip { grid-template-columns: 1fr; } .strip .phone { width: min(280px, 72%); } }
+
+/* Prose pages — privacy, support, changelog */
+.prose { padding: clamp(28px, 4vw, 44px); max-width: 820px; }
+.prose p, .prose ul { max-width: 68ch; }
+.prose h2 { margin-top: 34px; font-size: 26px; }
+.prose h2:first-child { margin-top: 0; }
+.prose h3 { margin-top: 24px; }
+.prose ul { margin: 0 0 16px; padding-left: 22px; color: var(--ink-2); }
+.prose li { margin-bottom: 8px; }
+.prose code { font-family: var(--font-mono); font-size: 14px; background: var(--glass-well); padding: 2px 6px; border-radius: 6px; }
+.meta { font-size: 14px; color: var(--ink-3); }
+
+/* Changelog */
+.release { padding: 24px 26px; margin-bottom: 18px; }
+.release__head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.tag {
+  display: inline-flex; align-items: center; height: 26px; padding: 0 12px;
+  border-radius: var(--r-capsule); background: var(--glass-well);
+  border: 1px solid var(--hairline);
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-2);
+}
+
+/* The closing card */
+/* The last thing on the page, so it carries the icon, the one action, and the
+   three facts somebody hesitating would want — not a repeat of the hero. */
+.closer {
+  padding: clamp(36px, 5vw, 60px) clamp(24px, 4vw, 48px);
+  text-align: center;
+}
+.closer__icon {
+  width: 76px; height: 76px; border-radius: 18px; margin: 0 auto 18px;
+  box-shadow: 0 0 0 1px var(--hairline), 0 12px 30px rgba(11, 13, 20, .12);
+}
+.closer .label { display: block; margin-bottom: 12px; }
+.closer .lead { margin-inline: auto; }
+.closer__cta {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+  margin-top: 26px;
+}
+.closer__points {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px;
+  list-style: none; margin: 28px 0 0; padding: 0;
+  font-size: 15px; color: var(--ink-2);
+}
+/* A tick before each, drawn rather than an image or an emoji. */
+.closer__points li { display: flex; align-items: center; gap: 8px; }
+.closer__points li::before {
+  content: ""; flex: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: color-mix(in oklab, var(--on) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--on) 45%, transparent);
+}
+@media (max-width: 620px) {
+  .closer__points { flex-direction: column; align-items: flex-start; text-align: left; }
+}
+
+/* Footer */
+/* Three columns on a wide screen, stacked on a phone. The brand block says
+   what this is and offers the one action; the two navs are everything else,
+   grouped rather than strung along a single line. */
+.footer { padding-block: 40px 44px; }
+.footer__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
+  gap: 34px 28px;
+  padding: 34px 32px;
+}
+.footer__brand p { font-size: 15px; margin: 12px 0 18px; max-width: 32ch; }
+.footer__mark {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-round); font-weight: 800; font-size: 19px; color: var(--ink);
+}
+.footer__mark:hover { text-decoration: none; }
+.footer__mark img {
+  width: 28px; height: 28px; border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--hairline), 0 1px 2px rgba(11, 11, 13, .08);
+}
+
+.footer__col { display: flex; flex-direction: column; gap: 10px; }
+.footer__col .label { margin-bottom: 2px; }
+.footer__col a { color: var(--ink-2); font-size: 15px; width: fit-content; }
+.footer__col a:hover { color: var(--ink); text-decoration: none; }
+
+.footer__legal a { color: var(--ink-2); }
+.footer__legal {
+  margin: 20px 4px 0;
+  font-size: 13px; line-height: 1.6; color: var(--ink-3);
+}
+
+@media (max-width: 900px) {
+  .footer__inner { grid-template-columns: 1fr 1fr; padding: 28px 24px; gap: 28px 20px; }
+  .footer__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 460px) {
+  .footer__inner { grid-template-columns: 1fr; }
+}
+
+/* Motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .phone--tilt { transform: none; }
+}
+
+/* ============================================================== motion */
+/* One idea: things arrive by fading up a little as they come into view.
+   Only opacity and transform, so the compositor does all of it and the main
+   thread stays free for scrolling. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s cubic-bezier(.22,.61,.36,1),
+              transform .6s cubic-bezier(.22,.61,.36,1);
+  will-change: opacity, transform;
+}
+.reveal.is-in { opacity: 1; transform: none; }
+/* A row of cards arrives one after another rather than as a block. */
+.reveal[data-delay="1"] { transition-delay: .08s; }
+.reveal[data-delay="2"] { transition-delay: .16s; }
+.reveal[data-delay="3"] { transition-delay: .24s; }
+.reveal[data-delay="4"] { transition-delay: .32s; }
+.reveal[data-delay="5"] { transition-delay: .40s; }
+
+/* The chips beside the hero phone breathe, so the shot doesn't read as a
+   still life. Two different durations, or they move as one object. */
+@keyframes float-a { from { transform: translateY(0); } to { transform: translateY(-9px); } }
+@keyframes float-b { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+.chip--a { animation: float-a 4.5s ease-in-out infinite alternate; }
+.chip--b { animation: float-b 6s ease-in-out infinite alternate; }
+
+/* ============================================================ mono label */
+/* The second voice on the page: small, tracked out, upper case. Labels and
+   eyebrows only — never a sentence you actually read. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.section__head .label { display: block; margin-bottom: 14px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.card .label { display: block; margin-bottom: 10px; }
+.shot figcaption { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em;
+                   text-transform: uppercase; color: var(--ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .phone--tilt { transform: none; }
+}
+
+/* ============================================================== motion */
+/* One idea: things arrive by fading up a little as they come into view.
+   Only opacity and transform, so the compositor does all of it and the main
+   thread stays free for scrolling. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s cubic-bezier(.22,.61,.36,1),
+              transform .6s cubic-bezier(.22,.61,.36,1);
+  will-change: opacity, transform;
+}
+.reveal.is-in { opacity: 1; transform: none; }
+/* A row of cards arrives one after another rather than as a block. */
+.reveal[data-delay="1"] { transition-delay: .08s; }
+.reveal[data-delay="2"] { transition-delay: .16s; }
+.reveal[data-delay="3"] { transition-delay: .24s; }
+.reveal[data-delay="4"] { transition-delay: .32s; }
+.reveal[data-delay="5"] { transition-delay: .40s; }
+
+/* The chips beside the hero phone breathe, so the shot doesn't read as a
+   still life. Two different durations, or they move as one object. */
+@keyframes float-a { from { transform: translateY(0); } to { transform: translateY(-9px); } }
+@keyframes float-b { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+.chip--a { animation: float-a 4.5s ease-in-out infinite alternate; }
+.chip--b { animation: float-b 6s ease-in-out infinite alternate; }
+
+/* ============================================================ mono label */
+/* The second voice on the page: small, tracked out, upper case. Labels and
+   eyebrows only — never a sentence you actually read. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.section__head .label { display: block; margin-bottom: 14px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.card .label { display: block; margin-bottom: 10px; }
+.shot figcaption { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em;
+                   text-transform: uppercase; color: var(--ink-3); }
+
+/* ============================================================== carousel */
+.carousel { position: relative; }
+.carousel__track {
+  --card: clamp(210px, 24vw, 264px);
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px 4px 8px;
+  margin-inline: -4px;
+  /* The browser's own momentum, and no scrollbar drawn over the cards. */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* No hard edge where the strip ends: the cards dissolve into the page on
+     both sides, so the row reads as part of the page rather than as a window
+     cut into it. The mask is on the scroller itself, so the arrows and dots —
+     its siblings — stay solid. */
+  /* Fixed pixels, not a percentage: a percentage feather grows with the
+     viewport and starts eating the card. 28px is enough to kill the cut edge
+     and little enough that a card at rest is untouched. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px,
+                                      #000 calc(100% - 28px), transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 28px,
+                                      #000 calc(100% - 28px), transparent 100%);
+}
+@media (max-width: 720px) {
+  .carousel__track {
+    /* One card at a time, with the next one showing at the edge so it is
+       obvious the strip moves. The side padding is what lets the first and
+       last card reach the middle of the screen — without it they stop against
+       the edge and never centre. */
+    --card: 74vw;
+    gap: 14px;
+    padding-inline: calc((100% - var(--card)) / 2);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px,
+                                        #000 calc(100% - 16px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 16px,
+                                        #000 calc(100% - 16px), transparent 100%);
+  }
+}
+.carousel__track::-webkit-scrollbar { display: none; }
+.carousel__track.is-dragging { scroll-behavior: auto; cursor: grabbing; }
+.carousel__track.is-dragging * { pointer-events: none; }
+
+.carousel .shot {
+  flex: 0 0 var(--card);
+  scroll-snap-align: center;
+  margin: 0;
+}
+.carousel .phone { width: 100%; }
+
+.carousel__arrow {
+  position: absolute; top: 44%; z-index: 3;
+  width: 46px; height: 46px; border-radius: var(--r-capsule);
+  display: grid; place-items: center;
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--hairline); border-top-color: var(--rim);
+  box-shadow: var(--shadow);
+  color: var(--ink); cursor: pointer;
+  transition: transform .16s ease, opacity .2s ease;
+}
+.carousel__arrow:hover { transform: scale(1.06); }
+.carousel__arrow[disabled] { opacity: 0; pointer-events: none; }
+.carousel__arrow--prev { left: -10px; }
+.carousel__arrow--next { right: -10px; }
+@media (max-width: 720px) { .carousel__arrow { display: none; } }
+
+.carousel__dots { display: flex; justify-content: center; gap: 8px; margin-top: 22px; }
+.carousel__dot {
+  width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--ink-3); opacity: .28; cursor: pointer;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.carousel__dot.is-on { opacity: 1; transform: scale(1.35); background: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .chip--a, .chip--b { animation: none; }
+  .carousel__track { scroll-behavior: auto; }
+}
+
+/* ================================================================= support */
+.support__top {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+.support__top .card h3 { font-size: 19px; word-break: break-word; }
+.support__checklist { margin: 14px 0 0; padding-left: 20px; color: var(--ink-2); }
+.support__checklist li { margin-bottom: 7px; }
+@media (max-width: 780px) { .support__top { grid-template-columns: 1fr; } }
+
+/* The questions: closed until asked for, so the page is a list you scan
+   rather than a wall you scroll. <details> does the work — it opens with no
+   JavaScript, and it is findable by the browser's own in-page search. */
+.faq { display: grid; gap: 34px; }
+.faq__group .label { display: block; margin-bottom: 12px; }
+
+.faq__item {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--hairline);
+  border-top-color: var(--rim);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.faq__item summary {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 22px;
+  font-family: var(--font-round); font-weight: 700; font-size: 17px;
+  cursor: pointer;
+  list-style: none;
+}
+.faq__item summary::-webkit-details-marker { display: none; }
+/* The chevron, drawn from a rotated corner rather than loaded as an icon. */
+.faq__item summary::after {
+  content: "";
+  flex: none; margin-left: auto;
+  width: 9px; height: 9px;
+  border-right: 2px solid var(--ink-3);
+  border-bottom: 2px solid var(--ink-3);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform .22s ease;
+}
+.faq__item[open] summary::after { transform: rotate(-135deg) translate(-3px, -3px); }
+.faq__item summary:hover { background: var(--glass-well); }
+.faq__answer { padding: 0 22px 20px; }
+.faq__answer p { margin: 0; }
+
+/* =============================================================== releases */
+.release { padding: 26px 28px; margin-bottom: 20px; }
+.release__head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.release ul { margin: 0; padding-left: 20px; color: var(--ink-2); }
+.release li { margin-bottom: 9px; }
+.release b { color: var(--ink); font-weight: 600; }
+
+/* The release that carries the headline feature: room to show it rather than
+   list it. */
+.release--feature { padding: clamp(28px, 4vw, 44px); }
+.release--feature h2 { font-size: clamp(26px, 3.2vw, 36px); margin-top: 6px; }
+.release--feature .lead { max-width: 60ch; }
+
+.release__figure {
+  display: grid; gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 26px 0 8px;
+}
+.release__figure figure { margin: 0; }
+/* The close-ups are crops of the real interface, so they get the same glass
+   treatment as everything else rather than sitting on the page raw. */
+.release__figure img {
+  width: 100%; height: auto;
+  border-radius: var(--r-panel);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow);
+  background: var(--glass-well);
+}
+.release__figure figcaption {
+  margin-top: 12px; font-size: 14.5px; line-height: 1.5; color: var(--ink-2);
+}
+.release__figure figcaption b { color: var(--ink); }
+
+.release__points { list-style: none; margin: 24px 0 18px; padding: 0; }
+.release__points li {
+  padding: 13px 0; border-bottom: 1px solid var(--hairline);
+  color: var(--ink-2); font-size: 15.5px;
+}
+.release__points li:last-child { border-bottom: 0; }
+
+@media (max-width: 760px) { .release__figure { grid-template-columns: 1fr; } }
+
+/* ================================================================= search */
+.search-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  height: 36px; padding: 0 12px 0 11px; margin-left: auto;
+  border-radius: 10px; border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, .5);
+  color: var(--ink-3); font-size: 14px; font-family: inherit;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.search-btn:hover { color: var(--ink-2); border-color: rgba(11, 13, 20, .14); background: #fff; }
+.search-btn kbd {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 2px 5px; border-radius: 5px;
+  background: rgba(11, 13, 20, .05); color: var(--ink-3);
+}
+.masthead__cta { margin-left: 10px; }
+@media (max-width: 760px) {
+  .search-btn span, .search-btn kbd { display: none; }
+  .search-btn { padding: 0 9px; }
+}
+
+.search[hidden] { display: none !important; }
+.search {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(11, 13, 20, .28);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  padding: clamp(60px, 12vh, 140px) 20px 20px;
+  display: flex; justify-content: center; align-items: flex-start;
+}
+.search__panel {
+  width: 100%; max-width: 620px;
+  background: color-mix(in oklab, var(--ground) 82%, white);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  box-shadow: 0 40px 90px rgba(11, 13, 20, .28);
+  overflow: hidden;
+  animation: search-in .18s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes search-in { from { opacity: 0; transform: translateY(-8px) scale(.985); } }
+
+.search__field { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--hairline); }
+.search__field svg { flex: none; color: var(--ink-3); }
+.search__input {
+  flex: 1; border: 0; background: none; outline: none;
+  font-family: inherit; font-size: 17px; color: var(--ink);
+}
+.search__input::placeholder { color: var(--ink-3); }
+.search__close {
+  border: 0; background: rgba(11, 13, 20, .05); color: var(--ink-2);
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 4px 8px; border-radius: 6px; cursor: pointer;
+}
+
+.search__results { max-height: min(56vh, 460px); overflow-y: auto; padding: 8px; }
+.search__hit {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px;
+  padding: 11px 13px; border-radius: 12px; color: var(--ink);
+}
+.search__hit:hover, .search__hit.is-active { background: rgba(10, 132, 255, .09); text-decoration: none; }
+.search__hit-title { font-weight: 600; font-size: 15.5px; }
+.search__hit .label { justify-self: end; }
+.search__hit-body { grid-column: 1 / -1; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+.search__empty { padding: 22px 14px; color: var(--ink-2); font-size: 15px; }

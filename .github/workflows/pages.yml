@@ -1,0 +1,59 @@
+# Publishes this site to GitHub Pages, at https://droidboy08-hub.github.io/.
+#
+# Only the site's own pages go out: tools/ and DESIGN.md are for working on
+# the site, not part of it, and hidden files (this workflow, .gitignore) stay
+# behind. Before upload it does what the old IONOS deploy script did: the
+# search index is rebuilt from the pages, and the stylesheet and script links
+# are stamped with a hash of their contents, so a changed file arrives under a
+# new address instead of from a visitor's cache.
+#
+# titlelessbrowser.com moves here once its DNS points at GitHub. Set it then
+# in the repository's Pages settings: a workflow deployment ignores a CNAME
+# file. The github.io address then forwards to it, so links to it keep working.
+name: Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and a running one is never cut off half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the site
+        run: |
+          python3 tools/build-search-index.py
+          css=$(md5sum assets/site.css | cut -c1-8)
+          js=$(md5sum assets/site.js | cut -c1-8)
+          mkdir ../_site
+          rsync -a --exclude tools --exclude DESIGN.md --exclude '.*' ./ ../_site/
+          find ../_site -name '*.html' -exec sed -i -E \
+            -e "s|(/assets/site\.css)(\?v=[a-f0-9]+)?|\1?v=$css|g" \
+            -e "s|(/assets/site\.js)(\?v=[a-f0-9]+)?|\1?v=$js|g" {} +
+          mv ../_site _site
+          echo "stamped css v=$css  js v=$js"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
